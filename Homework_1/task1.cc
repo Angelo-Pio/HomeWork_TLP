@@ -15,6 +15,7 @@
  *
  */
 
+#include <stdio.h>
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
 #include "ns3/netanim-module.h"
@@ -22,13 +23,14 @@
 #include "ns3/point-to-point-module.h"
 #include "ns3/applications-module.h"
 #include "ns3/point-to-point-layout-module.h"
+#include "ns3/csma-helper.h"
 
 // Network topology (default)
 
 
 // 
 //        n1
-//        \
+//        /
 //     n2-n0 ------ n4  n5  n6 --- n7  n8  n9
 //        \          |  |  |     |   |  | 
 //        n3        ========     ========
@@ -36,28 +38,18 @@
 
 // Constants
 
-#define n4 4;
-#define n6 2;
-
-#define n5 1;
-#define n7 0;
-#define n9 2;
+#define n4 4
+#define n6 2
+#define n5 1
+#define n7 0
+#define n9 2
 
 using namespace ns3;
 
-NS_LOG_COMPONENT_DEFINE(“Task_1_Team_56”);
+NS_LOG_COMPONENT_DEFINE("Task_1_Team_56");
 
-int 
-main (int argc, char *argv[])
+int main (int argc, char *argv[])
 {
-
-  //
-  // Set up some default values for the simulation.
-  //
-  Config::SetDefault ("ns3::OnOffApplication::PacketSize", UintegerValue (137));
-
-  // ??? try and stick 15kb/s into the data rate
-  Config::SetDefault ("ns3::OnOffApplication::DataRate", StringValue ("14kb/s"));
 
   //
   // Default number of nodes in the star.  Overridable by command line argument.
@@ -65,10 +57,16 @@ main (int argc, char *argv[])
   uint32_t nSpokes = 4;
   uint32_t nCsma1 = 2;
   uint32_t nCsma2 = 3;
+  int configuration = 0;
+
 
   CommandLine cmd (__FILE__);
   cmd.AddValue ("nSpokes", "Number of nodes to place in the star", nSpokes);
+  cmd.AddValue ("configuration", "Configuration to apply", configuration);
   cmd.Parse (argc, argv);
+
+  printf("Configuration is: %d", configuration);
+
 
 // * ############################################# * 
   
@@ -79,25 +77,24 @@ main (int argc, char *argv[])
   pointToPoint.SetChannelAttribute ("Delay", StringValue ("10us"));
   PointToPointStarHelper star (nSpokes, pointToPoint);
 
-  Node hub = star.GetHub();
 
 // * ############################################# * 
 
   NS_LOG_INFO ("Building Csma topology #1 .");
   
   NodeContainer csmaNodes1;
-  csmaNodes1.Add(star.GetSpokeNode(n4));
+  csmaNodes1.Add(star.GetSpokeNode(3));
   csmaNodes1.Create(nCsma1);
   
   CsmaHelper csma1;
   
   csma1.SetChannelAttribute ("DataRate", StringValue ("25Mbps"));
-  csma1.SetChannelAttribute ("Delay", TimeValue (MicroSeconds (10)));
+  csma1.SetChannelAttribute ("Delay", TimeValue (MicroSeconds(10)));
   
 
 
   NetDeviceContainer csma1Devices;
-  csma1Devices = csma1.install(csmaNodes1);
+  csma1Devices = csma1.Install(csmaNodes1);
 
 // * ############################################# * 
 
@@ -112,19 +109,19 @@ main (int argc, char *argv[])
 
 
   NetDeviceContainer csma2Devices;
-  csma1Devices = csma2.install(csmaNodes2);
+  csma1Devices = csma2.Install(csmaNodes2);
   
 // * ############################################# * 
 
   NS_LOG_INFO ("Building PointToPointCsma topology");
 
   PointToPointHelper p2pCsma;
-  p2pCsma.SetChannelAttribute ("DataRate", StringValue ("80Mbps"));
+  p2pCsma.SetDeviceAttribute ("DataRate", StringValue ("80Mbps"));
   p2pCsma.SetChannelAttribute ("Delay", TimeValue (MicroSeconds (10)));
 
 
   NetDeviceContainer csmaP2PDevices;
-  csmaP2PDevices = p2pCsma.install(csmaNodes1.Get(n6), csmaNodes2.Get(n7))
+  csmaP2PDevices = p2pCsma.Install(csmaNodes1.Get(n6), csmaNodes2.Get(n7));
   
 /*
   !! ## variables definitions ##
@@ -148,41 +145,41 @@ main (int argc, char *argv[])
 
 // ! Internet Stack Here
 
-  NS_LOG_INFO ("Install internet stack on all nodes.");
-  InternetStackHelper internet;
-  star.InstallStack (internet);
+  // NS_LOG_INFO ("Install internet stack on all nodes.");
+  // InternetStackHelper internet;
+  // star.InstallStack (internet);
 
-  NS_LOG_INFO ("Assign IP Addresses.");
-  star.AssignIpv4Addresses (Ipv4AddressHelper ("10.1.1.0", "255.255.255.0"));
+  // NS_LOG_INFO ("Assign IP Addresses.");
+  // star.AssignIpv4Addresses (Ipv4AddressHelper ("10.1.1.0", "255.255.255.0"));
 
-  NS_LOG_INFO ("Create applications.");
-  //
-  // Create a packet sink on the star "hub" to receive packets.
-  // 
-  uint16_t port = 50000;
-  Address hubLocalAddress (InetSocketAddress (Ipv4Address::GetAny (), port));
-  PacketSinkHelper packetSinkHelper ("ns3::TcpSocketFactory", hubLocalAddress);
-  ApplicationContainer hubApp = packetSinkHelper.Install (star.GetHub ());
-  hubApp.Start (Seconds (1.0));
-  hubApp.Stop (Seconds (10.0));
+  // NS_LOG_INFO ("Create applications.");
+  // //
+  // // Create a packet sink on the star "hub" to receive packets.
+  // // 
+  // uint16_t port = 50000;
+  // Address hubLocalAddress (InetSocketAddress (Ipv4Address::GetAny (), port));
+  // PacketSinkHelper packetSinkHelper ("ns3::TcpSocketFactory", hubLocalAddress);
+  // ApplicationContainer hubApp = packetSinkHelper.Install (star.GetHub ());
+  // hubApp.Start (Seconds (1.0));
+  // hubApp.Stop (Seconds (10.0));
 
-  //
-  // Create OnOff applications to send TCP to the hub, one on each spoke node.
-  //
-  OnOffHelper onOffHelper ("ns3::TcpSocketFactory", Address ());
-  onOffHelper.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
-  onOffHelper.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
+  // //
+  // // Create OnOff applications to send TCP to the hub, one on each spoke node.
+  // //
+  // OnOffHelper onOffHelper ("ns3::TcpSocketFactory", Address ());
+  // onOffHelper.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
+  // onOffHelper.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
 
-  ApplicationContainer spokeApps;
+  // ApplicationContainer spokeApps;
 
-  for (uint32_t i = 0; i < star.SpokeCount (); ++i)
-    {
-      AddressValue remoteAddress (InetSocketAddress (star.GetHubIpv4Address (i), port));
-      onOffHelper.SetAttribute ("Remote", remoteAddress);
-      spokeApps.Add (onOffHelper.Install (star.GetSpokeNode (i)));
-    }
-  spokeApps.Start (Seconds (1.0));
-  spokeApps.Stop (Seconds (10.0));
+  // for (uint32_t i = 0; i < star.SpokeCount (); ++i)
+  //   {
+  //     AddressValue remoteAddress (InetSocketAddress (star.GetHubIpv4Address (i), port));
+  //     onOffHelper.SetAttribute ("Remote", remoteAddress);
+  //     spokeApps.Add (onOffHelper.Install (star.GetSpokeNode (i)));
+  //   }
+  // spokeApps.Start (Seconds (1.0));
+  // spokeApps.Stop (Seconds (10.0));
 
 // ! #######################  ENDING ##################################
 
@@ -190,22 +187,37 @@ main (int argc, char *argv[])
   //
   // Turn on global static routing so we can actually be routed across the star.
   //
-  Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
+  // Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
   NS_LOG_INFO ("Enable pcap tracing.");
   
-  pointToPoint.EnablePcapInternal ("star", star.GetHub(),true);
+  // char format[125];
+  // uint32_t nodeId;
 
 
-  
-  csma1.EnablePcapInternal("task1-", csmaNodes1.Get(n5),true);
-  csma2.EnablePcapInternal("", csmaNodes1.Get(n7),true);
+  // sprintf(format, "task1-%d-%d", configuration, star.GetHub()->GetId());
+  // pointToPoint.EnablePcap(format,star.GetHub()->GetDevice(0),true,true);
+
+  // nodeId = star.GetHub()->GetId();
+  // sprintf(format, "task1-%d-%d", configuration, nodeId);
 
 
-  NS_LOG_INFO ("Run Simulation.");
-  Simulator::Run ();
-  Simulator::Destroy ();
-  NS_LOG_INFO ("Done.");
+
+  // nodeId = csmaNodes1.Get(n5)->GetId();
+  // sprintf(format, "task1-%d-%d", configuration, nodeId);
+  // csma1.EnablePcap(format,csma1Devices.Get(n5),true,true);
+
+
+
+  // nodeId = csmaNodes1.Get(n7)->GetId();
+  // sprintf(format, "task1-%d-%d", configuration, nodeId);
+  // csma2.EnablePcap(format,csma2Devices.Get(n5),true,true);
+
+
+  // NS_LOG_INFO ("Run Simulation.");
+  // Simulator::Run ();
+  // Simulator::Destroy ();
+  // NS_LOG_INFO ("Done.");
 
   return 0;
 }
