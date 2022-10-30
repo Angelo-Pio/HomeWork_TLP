@@ -16,6 +16,7 @@
  */
 
 #include <stdio.h>
+#include <inttypes.h>
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
 #include "ns3/netanim-module.h"
@@ -38,7 +39,7 @@
 
 // Constants
 
-#define n4 4
+#define n4 3
 #define n6 2
 #define n5 1
 #define n7 0
@@ -83,7 +84,7 @@ int main (int argc, char *argv[])
   NS_LOG_INFO ("Building Csma topology #1 .");
   
   NodeContainer csmaNodes1;
-  csmaNodes1.Add(star.GetSpokeNode(3));
+  csmaNodes1.Add(star.GetSpokeNode(n4));
   csmaNodes1.Create(nCsma1);
   
   CsmaHelper csma1;
@@ -109,7 +110,7 @@ int main (int argc, char *argv[])
 
 
   NetDeviceContainer csma2Devices;
-  csma1Devices = csma2.Install(csmaNodes2);
+  csma2Devices = csma2.Install(csmaNodes2);
   
 // * ############################################# * 
 
@@ -191,33 +192,23 @@ int main (int argc, char *argv[])
 
   NS_LOG_INFO ("Enable pcap tracing.");
   
-  // char format[125];
-  // uint32_t nodeId;
+  char format[255];
 
 
-  // sprintf(format, "task1-%d-%d", configuration, star.GetHub()->GetId());
-  // pointToPoint.EnablePcap(format,star.GetHub()->GetDevice(0),true,true);
+  sprintf(format, "task1-%d-%" PRIu32 , configuration, star.GetHub()->GetId());
+  pointToPoint.EnablePcap(format,star.GetHub()->GetDevice(0),true,true);
 
-  // nodeId = star.GetHub()->GetId();
-  // sprintf(format, "task1-%d-%d", configuration, nodeId);
+  sprintf(format, "task1-%d-%" PRIu32, configuration, csmaNodes1.Get(n5)->GetId());
+  csma1.EnablePcap(format,csma1Devices.Get(n5),true,true);
 
-
-
-  // nodeId = csmaNodes1.Get(n5)->GetId();
-  // sprintf(format, "task1-%d-%d", configuration, nodeId);
-  // csma1.EnablePcap(format,csma1Devices.Get(n5),true,true);
+  sprintf(format, "task1-%d-%" PRIu32, configuration, csmaNodes2.Get(n7)->GetId());
+  csma2.EnablePcap(format,csma2Devices.Get(n7),true,true);
 
 
-
-  // nodeId = csmaNodes1.Get(n7)->GetId();
-  // sprintf(format, "task1-%d-%d", configuration, nodeId);
-  // csma2.EnablePcap(format,csma2Devices.Get(n5),true,true);
-
-
-  // NS_LOG_INFO ("Run Simulation.");
-  // Simulator::Run ();
-  // Simulator::Destroy ();
-  // NS_LOG_INFO ("Done.");
+  NS_LOG_INFO ("Run Simulation.");
+  Simulator::Run ();
+  Simulator::Destroy ();
+  NS_LOG_INFO ("Done.");
 
   return 0;
 }
