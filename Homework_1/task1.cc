@@ -40,9 +40,12 @@
 // Constants
 
 #define n4 3
+
 #define n6 2
 #define n5 1
+
 #define n7 0
+#define n8 1
 #define n9 2
 
 using namespace ns3;
@@ -66,7 +69,12 @@ int main (int argc, char *argv[])
   cmd.AddValue ("configuration", "Configuration to apply", configuration);
   cmd.Parse (argc, argv);
 
-  printf("Configuration is: %d\n", configuration);
+  if(configuration != 0 || configuration != 1 || configuration != 2){
+    printf("Configuration is: %d\n", configuration);
+    printf("Accepted values: 0 1 2");
+    exit(1);
+  }
+
 
 
 // * ############################################# * 
@@ -158,72 +166,71 @@ int main (int argc, char *argv[])
 
   NS_LOG_INFO ("Assign IP Addresses.");
   Ipv4AddressHelper Address;
-  Address.SetBase("10.0.1.0", "255.255.255.0");
+  Address.SetBase("10.1.1.0", "255.255.255.0");
   star.AssignIpv4Addresses (Address);
 
-  printf("Hub: %" PRIu32 "Address: %" PRIu32 "\n", star.GetHub()->GetId(),  star.GetHubIpv4Address(0).Get());
+  std::ostream& os = std::cout;
+  // star.GetHubIpv4Address(0).Print(os);
+  puts("\n");
+
   
-  for (uint32_t i = 0; i < star.SpokeCount(); i++)
-  {
-    
-      printf("Node: %" PRIu32 "Address: %" PRIu32 "\n", star.GetSpokeNode(i)->GetId(),  star.GetSpokeIpv4Address(i).Get());
-  }
+  // for (uint32_t i = 0; i < star.SpokeCount(); i++)
+  // {
+  //   printf("Node: %" PRIu32 " ", star.GetSpokeNode(i)->GetId());
+  //   star.GetSpokeIpv4Address(i).Print(os);
+  //   puts("\n");
+  // }
 
   Address.SetBase("192.118.1.0", "255.255.255.0");
   Ipv4InterfaceContainer c1Addresses;
   c1Addresses = Address.Assign(csma1Devices);
 
-  for (uint32_t i = 0; i < nCsma1; i++)
-  {
+  // for (uint32_t i = 0; i < csmaNodes1.GetN(); i++)
+  // {
     
-      printf("Node: %" PRIu32 "Address: %" PRIu32 "\n", csma1Devices.Get(i)->GetNode()->GetId(), csma1Devices.Get(i)->GetAddress());
-  }
+  //   printf("Node: %" PRIu32 " ", csmaNodes1.Get(i)->GetId());
+  //   c1Addresses.Get(i).first->GetAddress(1,0).GetLocal().Print(os);    
+  //   puts("\n");
+  // }
+
   // Ipv4AddressHelper csma2Address;
   Address.SetBase("192.118.2.0", "255.255.255.0");
   Ipv4InterfaceContainer c2Addresses;
   c2Addresses = Address.Assign(csma2Devices);
 
-  // // Ipv4AddressHelper p2pAddress;
-  // Address.SetBase("10.0.2.0", "255.255.255.254");
-  // Ipv4InterfaceContainer p2pAddresses;
-  // p2pAddresses = Address.Assign(csmaP2PDevices);
+  // for (uint32_t i = 0; i < csmaNodes2.GetN(); i++)
+  // {
+    
+  //   printf("Node: %" PRIu32 " ", csmaNodes2.Get(i)->GetId());
+  //   c2Addresses.Get(i).first->GetAddress(1,0).GetLocal().Print(os);    
+  //   puts("\n");
+  // }
+  //   printf("Node: %" PRIu32 " ", csmaNodes1.Get(0)->GetId());
+  //   c1Addresses.Get(0).first->GetAddress(2,0).GetLocal().Print(os);    
   
 
-
+  Address.SetBase("10.2.1.0", "255.255.255.252");
+  Ipv4InterfaceContainer p2pAddresses;
+  p2pAddresses = Address.Assign(csmaP2PDevices);
+  
+   printf("Node: %" PRIu32 " ", csmaNodes1.Get(n6)->GetId());
+  c1Addresses.Get(2).first->GetAddress(2,0).GetLocal().Print(os);
+  
+   printf("Node: %" PRIu32 " ", csmaNodes2.Get(0)->GetId());
+  c2Addresses.Get(0).first->GetAddress(2,0).GetLocal().Print(os);
   
   
+// ! ####################### TASKS ################################
+
+  if(configuration == 0){
+
+  }else if (configuration == 1){
+
+  }else{
+
+  }
 
 
-// Netmask for p2p : 	255.255.255.254
-
-  // NS_LOG_INFO ("Create applications.");
-  // //
-  // // Create a packet sink on the star "hub" to receive packets.
-  // // 
-  // uint16_t port = 50000;
-  // Address hubLocalAddress (InetSocketAddress (Ipv4Address::GetAny (), port));
-  // PacketSinkHelper packetSinkHelper ("ns3::TcpSocketFactory", hubLocalAddress);
-  // ApplicationContainer hubApp = packetSinkHelper.Install (star.GetHub ());
-  // hubApp.Start (Seconds (1.0));
-  // hubApp.Stop (Seconds (10.0));
-
-  // //
-  // // Create OnOff applications to send TCP to the hub, one on each spoke node.
-  // //
-  // OnOffHelper onOffHelper ("ns3::TcpSocketFactory", Address ());
-  // onOffHelper.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
-  // onOffHelper.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
-
-  // ApplicationContainer spokeApps;
-
-  // for (uint32_t i = 0; i < star.SpokeCount (); ++i)
-  //   {
-  //     AddressValue remoteAddress (InetSocketAddress (star.GetHubIpv4Address (i), port));
-  //     onOffHelper.SetAttribute ("Remote", remoteAddress);
-  //     spokeApps.Add (onOffHelper.Install (star.GetSpokeNode (i)));
-  //   }
-  // spokeApps.Start (Seconds (1.0));
-  // spokeApps.Stop (Seconds (10.0));
 
 // ! #######################  ENDING ##################################
 
