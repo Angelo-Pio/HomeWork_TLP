@@ -66,7 +66,7 @@ int main (int argc, char *argv[])
   cmd.AddValue ("configuration", "Configuration to apply", configuration);
   cmd.Parse (argc, argv);
 
-  printf("Configuration is: %d", configuration);
+  printf("Configuration is: %d\n", configuration);
 
 
 // * ############################################# * 
@@ -153,23 +153,45 @@ int main (int argc, char *argv[])
   internet.Install(csmaNodes1.Get(n6));
   internet.Install(csmaNodes2);
 
+
+// ! Ip Address Assignment
+
   NS_LOG_INFO ("Assign IP Addresses.");
-  star.AssignIpv4Addresses (Ipv4AddressHelper ("10.0.1.0", "255.255.255.0"));
+  Ipv4AddressHelper Address;
+  Address.SetBase("10.0.1.0", "255.255.255.0");
+  star.AssignIpv4Addresses (Address);
 
-  Ipv4AddressHelper csma1Address;
-  csma1Address.SetBase("192.118.1.0", "255.255.255.0");
+  printf("Hub: %" PRIu32 "Address: %" PRIu32 "\n", star.GetHub()->GetId(),  star.GetHubIpv4Address(0).Get());
+  
+  for (uint32_t i = 0; i < star.SpokeCount(); i++)
+  {
+    
+      printf("Node: %" PRIu32 "Address: %" PRIu32 "\n", star.GetSpokeNode(i)->GetId(),  star.GetSpokeIpv4Address(i).Get());
+  }
+
+  Address.SetBase("192.118.1.0", "255.255.255.0");
   Ipv4InterfaceContainer c1Addresses;
-  c1Addresses = csma1Address.Assign(csma1Devices);
+  c1Addresses = Address.Assign(csma1Devices);
 
-  Ipv4AddressHelper csma2Address;
-  csma2Address.SetBase("192.118.2.0", "255.255.255.0");
+  for (uint32_t i = 0; i < nCsma1; i++)
+  {
+    
+      printf("Node: %" PRIu32 "Address: %" PRIu32 "\n", csma1Devices.Get(i)->GetNode()->GetId(), csma1Devices.Get(i)->GetAddress());
+  }
+  // Ipv4AddressHelper csma2Address;
+  Address.SetBase("192.118.2.0", "255.255.255.0");
   Ipv4InterfaceContainer c2Addresses;
-  c2Addresses = csma2Address.Assign(csma2Devices);
+  c2Addresses = Address.Assign(csma2Devices);
 
-  Ipv4AddressHelper p2pAddress;
-  p2pAddress.SetBase("10.0.2.0", "255.255.255.254");
-  Ipv4InterfaceContainer p2pAddresses;
-  p2pAddresses = p2pAddress.Assign(csmaP2PDevices);
+  // // Ipv4AddressHelper p2pAddress;
+  // Address.SetBase("10.0.2.0", "255.255.255.254");
+  // Ipv4InterfaceContainer p2pAddresses;
+  // p2pAddresses = Address.Assign(csmaP2PDevices);
+  
+
+
+  
+  
 
 
 // Netmask for p2p : 	255.255.255.254
@@ -209,7 +231,7 @@ int main (int argc, char *argv[])
   //
   // Turn on global static routing so we can actually be routed across the star.
   //
-  // Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
+  Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
   NS_LOG_INFO ("Enable pcap tracing.");
   
