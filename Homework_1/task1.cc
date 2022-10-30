@@ -146,12 +146,33 @@ int main (int argc, char *argv[])
 
 // ! Internet Stack Here
 
-  // NS_LOG_INFO ("Install internet stack on all nodes.");
-  // InternetStackHelper internet;
-  // star.InstallStack (internet);
+  NS_LOG_INFO ("Install internet stack on all nodes.");
+  InternetStackHelper internet;
+  star.InstallStack (internet);
+  internet.Install(csmaNodes1.Get(n5));
+  internet.Install(csmaNodes1.Get(n6));
+  internet.Install(csmaNodes2);
 
-  // NS_LOG_INFO ("Assign IP Addresses.");
-  // star.AssignIpv4Addresses (Ipv4AddressHelper ("10.1.1.0", "255.255.255.0"));
+  NS_LOG_INFO ("Assign IP Addresses.");
+  star.AssignIpv4Addresses (Ipv4AddressHelper ("10.0.1.0", "255.255.255.0"));
+
+  Ipv4AddressHelper csma1Address;
+  csma1Address.SetBase("192.118.1.0", "255.255.255.0");
+  Ipv4InterfaceContainer c1Addresses;
+  c1Addresses = csma1Address.Assign(csma1Devices);
+
+  Ipv4AddressHelper csma2Address;
+  csma2Address.SetBase("192.118.2.0", "255.255.255.0");
+  Ipv4InterfaceContainer c2Addresses;
+  c2Addresses = csma2Address.Assign(csma2Devices);
+
+  Ipv4AddressHelper p2pAddress;
+  p2pAddress.SetBase("10.0.2.0", "255.255.255.254");
+  Ipv4InterfaceContainer p2pAddresses;
+  p2pAddresses = p2pAddress.Assign(csmaP2PDevices);
+
+
+// Netmask for p2p : 	255.255.255.254
 
   // NS_LOG_INFO ("Create applications.");
   // //
