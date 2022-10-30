@@ -17,6 +17,7 @@
 
 #include <stdio.h>
 #include <inttypes.h>
+#include "ns3/address.h"
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
 #include "ns3/netanim-module.h"
@@ -25,7 +26,7 @@
 #include "ns3/applications-module.h"
 #include "ns3/point-to-point-layout-module.h"
 #include "ns3/csma-helper.h"
-
+#include "ns3/inet-socket-address.h"
 // Network topology (default)
 
 
@@ -39,6 +40,7 @@
 
 // Constants
 
+#define n1 0
 #define n4 3
 
 #define n6 2
@@ -69,11 +71,7 @@ int main (int argc, char *argv[])
   cmd.AddValue ("configuration", "Configuration to apply", configuration);
   cmd.Parse (argc, argv);
 
-  if(configuration != 0 || configuration != 1 || configuration != 2){
-    printf("Configuration is: %d\n", configuration);
-    printf("Accepted values: 0 1 2");
-    exit(1);
-  }
+  
 
 
 
@@ -170,43 +168,43 @@ int main (int argc, char *argv[])
   star.AssignIpv4Addresses (Address);
 
   std::ostream& os = std::cout;
-  // star.GetHubIpv4Address(0).Print(os);
+  star.GetHubIpv4Address(0).Print(os);
   puts("\n");
 
   
-  // for (uint32_t i = 0; i < star.SpokeCount(); i++)
-  // {
-  //   printf("Node: %" PRIu32 " ", star.GetSpokeNode(i)->GetId());
-  //   star.GetSpokeIpv4Address(i).Print(os);
-  //   puts("\n");
-  // }
+  for (uint32_t i = 0; i < star.SpokeCount(); i++)
+  {
+    printf("Node: %" PRIu32 " ", star.GetSpokeNode(i)->GetId());
+    star.GetSpokeIpv4Address(i).Print(os);
+    puts("\n");
+  }
 
   Address.SetBase("192.118.1.0", "255.255.255.0");
   Ipv4InterfaceContainer c1Addresses;
   c1Addresses = Address.Assign(csma1Devices);
 
-  // for (uint32_t i = 0; i < csmaNodes1.GetN(); i++)
-  // {
+  for (uint32_t i = 0; i < csmaNodes1.GetN(); i++)
+  {
     
-  //   printf("Node: %" PRIu32 " ", csmaNodes1.Get(i)->GetId());
-  //   c1Addresses.Get(i).first->GetAddress(1,0).GetLocal().Print(os);    
-  //   puts("\n");
-  // }
+    printf("Node: %" PRIu32 " ", csmaNodes1.Get(i)->GetId());
+    c1Addresses.Get(i).first->GetAddress(1,0).GetLocal().Print(os);    
+    puts("\n");
+  }
 
   // Ipv4AddressHelper csma2Address;
   Address.SetBase("192.118.2.0", "255.255.255.0");
   Ipv4InterfaceContainer c2Addresses;
   c2Addresses = Address.Assign(csma2Devices);
 
-  // for (uint32_t i = 0; i < csmaNodes2.GetN(); i++)
-  // {
+  for (uint32_t i = 0; i < csmaNodes2.GetN(); i++)
+  {
     
-  //   printf("Node: %" PRIu32 " ", csmaNodes2.Get(i)->GetId());
-  //   c2Addresses.Get(i).first->GetAddress(1,0).GetLocal().Print(os);    
-  //   puts("\n");
-  // }
-  //   printf("Node: %" PRIu32 " ", csmaNodes1.Get(0)->GetId());
-  //   c1Addresses.Get(0).first->GetAddress(2,0).GetLocal().Print(os);    
+    printf("Node: %" PRIu32 " ", csmaNodes2.Get(i)->GetId());
+    c2Addresses.Get(i).first->GetAddress(1,0).GetLocal().Print(os);    
+    puts("\n");
+  }
+    printf("Node: %" PRIu32 " ", csmaNodes1.Get(0)->GetId());
+    c1Addresses.Get(0).first->GetAddress(2,0).GetLocal().Print(os);    
   
 
   Address.SetBase("10.2.1.0", "255.255.255.252");
@@ -224,10 +222,40 @@ int main (int argc, char *argv[])
 
   if(configuration == 0){
 
+    // * TCP sink
+    
+    uint16_t port = 2600;
+
+    PacketSinkHelper sink("ns3::TcpSocketFactory", InetSocketAddress(Ipv4Address::GetAny(), port));
+    ApplicationContainer sinkApp = sink.Install(star.GetSpokeNode(n1));
+    sinkApp.Start (Seconds (0));
+    sinkApp.Stop (Seconds (20.0));
+
+    // * TCP OnOff Client
+
+    OnOffHelper onOffHelper ("ns3::TcpSocketFactory", InetSocketAddress(star.GetSpokeIpv4Address(n1), port));
+    onOffHelper.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
+    onOffHelper.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
+    onOffHelper.SetAttribute ("PacketSize", UintegerValue(1500));
+
+    
+
+    ApplicationContainer client;
+    
+    AddressValue remoteAddress (InetSocketAddress (star.GetSpokeIpv4Address(n1), port));
+    onOffHelper.SetAttribute ("Remote", remoteAddress);
+
+    client = onOffHelper.Install(csmaNodes2.Get(n9));
+
+    client.Start (Seconds (3.0));
+    client.Stop (Seconds (15.0));
+
+
+
   }else if (configuration == 1){
-
+//  TODO
   }else{
-
+//  TODO
   }
 
 
@@ -254,6 +282,13 @@ int main (int argc, char *argv[])
   sprintf(format, "task1-%d-%" PRIu32, configuration, csmaNodes2.Get(n7)->GetId());
   csma2.EnablePcap(format,csma2Devices.Get(n7),true,true);
 
+  // ? get n1 and n9 pcap files
+
+  sprintf(format, "task1-%d-%" PRIu32, configuration, csmaNodes2.Get(n9)->GetId());
+  csma2.EnablePcap(format,csma2Devices.Get(n9),true,true);
+
+  sprintf(format, "task1-%d-%" PRIu32, configuration, star.GetSpokeNode(n1)->GetId());
+  pointToPoint.EnablePcap(format,star.GetSpokeNode(n1)->GetDevice(0),true,true);
 
   NS_LOG_INFO ("Run Simulation.");
   Simulator::Run ();
