@@ -54,6 +54,8 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE("Task_1_Team_56");
 
+void printNodesIP(PointToPointStarHelper star, Ipv4InterfaceContainer c1Addresses, Ipv4InterfaceContainer c2Addresses, NodeContainer csmaNodes1, NodeContainer csmaNodes2 );
+
 int main (int argc, char *argv[])
 {
 
@@ -167,56 +169,25 @@ int main (int argc, char *argv[])
   Address.SetBase("10.1.1.0", "255.255.255.0");
   star.AssignIpv4Addresses (Address);
 
-  std::ostream& os = std::cout;
-  star.GetHubIpv4Address(0).Print(os);
-  puts("\n");
-
   
-  for (uint32_t i = 0; i < star.SpokeCount(); i++)
-  {
-    printf("Node: %" PRIu32 " ", star.GetSpokeNode(i)->GetId());
-    star.GetSpokeIpv4Address(i).Print(os);
-    puts("\n");
-  }
 
   Address.SetBase("192.118.1.0", "255.255.255.0");
   Ipv4InterfaceContainer c1Addresses;
   c1Addresses = Address.Assign(csma1Devices);
 
-  for (uint32_t i = 0; i < csmaNodes1.GetN(); i++)
-  {
-    
-    printf("Node: %" PRIu32 " ", csmaNodes1.Get(i)->GetId());
-    c1Addresses.Get(i).first->GetAddress(1,0).GetLocal().Print(os);    
-    puts("\n");
-  }
+  
 
-  // Ipv4AddressHelper csma2Address;
   Address.SetBase("192.118.2.0", "255.255.255.0");
   Ipv4InterfaceContainer c2Addresses;
   c2Addresses = Address.Assign(csma2Devices);
 
-  for (uint32_t i = 0; i < csmaNodes2.GetN(); i++)
-  {
-    
-    printf("Node: %" PRIu32 " ", csmaNodes2.Get(i)->GetId());
-    c2Addresses.Get(i).first->GetAddress(1,0).GetLocal().Print(os);    
-    puts("\n");
-  }
-    printf("Node: %" PRIu32 " ", csmaNodes1.Get(0)->GetId());
-    c1Addresses.Get(0).first->GetAddress(2,0).GetLocal().Print(os);    
   
 
   Address.SetBase("10.2.1.0", "255.255.255.252");
   Ipv4InterfaceContainer p2pAddresses;
   p2pAddresses = Address.Assign(csmaP2PDevices);
   
-   printf("Node: %" PRIu32 " ", csmaNodes1.Get(n6)->GetId());
-  c1Addresses.Get(2).first->GetAddress(2,0).GetLocal().Print(os);
-  
-   printf("Node: %" PRIu32 " ", csmaNodes2.Get(0)->GetId());
-  c2Addresses.Get(0).first->GetAddress(2,0).GetLocal().Print(os);
-  
+  printNodesIP( star,  c1Addresses,  c2Addresses, csmaNodes1, csmaNodes2 );
   
 // ! ####################### TASKS ################################
 
@@ -296,4 +267,44 @@ int main (int argc, char *argv[])
   NS_LOG_INFO ("Done.");
 
   return 0;
+}
+
+void printNodesIP(PointToPointStarHelper star, Ipv4InterfaceContainer c1Addresses, Ipv4InterfaceContainer c2Addresses, NodeContainer csmaNodes1, NodeContainer csmaNodes2 ){
+  std::ostream& os = std::cout;
+  star.GetHubIpv4Address(0).Print(os);
+  puts("\n");
+
+  
+  for (uint32_t i = 0; i < star.SpokeCount(); i++)
+  {
+    printf("Node: %" PRIu32 " ", star.GetSpokeNode(i)->GetId());
+    star.GetSpokeIpv4Address(i).Print(os);
+    puts("\n");
+  }
+for (uint32_t i = 0; i < csmaNodes1.GetN(); i++)
+  {
+    
+    printf("Node: %" PRIu32 " ", csmaNodes1.Get(i)->GetId());
+    c1Addresses.Get(i).first->GetAddress(1,0).GetLocal().Print(os);    
+    puts("\n");
+  }
+for (uint32_t i = 0; i < csmaNodes2.GetN(); i++)
+  {
+    
+    printf("Node: %" PRIu32 " ", csmaNodes2.Get(i)->GetId());
+    c2Addresses.Get(i).first->GetAddress(1,0).GetLocal().Print(os);    
+    puts("\n");
+  }
+    printf("Node: %" PRIu32 " ", csmaNodes1.Get(0)->GetId());
+    c1Addresses.Get(0).first->GetAddress(2,0).GetLocal().Print(os);    
+    puts("\n");
+  
+ printf("Node: %" PRIu32 " ", csmaNodes1.Get(n6)->GetId());
+  c1Addresses.Get(2).first->GetAddress(2,0).GetLocal().Print(os);
+    puts("\n");
+  
+   printf("Node: %" PRIu32 " ", csmaNodes2.Get(0)->GetId());
+  c2Addresses.Get(0).first->GetAddress(2,0).GetLocal().Print(os);
+    puts("\n");
+  
 }
