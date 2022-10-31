@@ -41,6 +41,8 @@
 // Constants
 
 #define n1 0
+#define n2 1
+#define n3 2
 #define n4 3
 
 #define n6 2
@@ -73,7 +75,7 @@ int main (int argc, char *argv[])
   cmd.AddValue ("configuration", "Configuration to apply", configuration);
   cmd.Parse (argc, argv);
 
-  
+  printf("configuration is: %d", configuration);
 
 
 
@@ -228,7 +230,71 @@ int main (int argc, char *argv[])
 
 
   }else if (configuration == 1){
-//  TODO
+    // * TCP SINK n1
+
+    uint16_t port1 = 2600;
+    PacketSinkHelper sink1("ns3::TcpSocketFactory", InetSocketAddress(Ipv4Address::GetAny(), port1));
+    ApplicationContainer sinkApp1= sink1.Install(star.GetSpokeNode(n1));
+    sinkApp1.Start (Seconds (0));
+    sinkApp1.Stop (Seconds (20.0));
+
+    //* TCP SINK n2
+
+    uint16_t port2 = 7777;
+    PacketSinkHelper sink2 ("ns3::TcpSocketFactory", InetSocketAddress(Ipv4Address::GetAny(), port2));
+    ApplicationContainer sinkApp2 = sink2.Install(star.GetSpokeNode(1));
+    sinkApp2.Start (Seconds (0));
+    sinkApp2.Stop (Seconds (20.0));
+
+    //* TCP onOff client n9 to n1
+
+    OnOffHelper onOffHelper1 ("ns3::TcpSocketFactory", InetSocketAddress(star.GetSpokeIpv4Address(n1), port1));
+    onOffHelper1.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
+    onOffHelper1.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
+    onOffHelper1.SetAttribute ("PacketSize", UintegerValue(2500));
+
+    ApplicationContainer client1;
+    
+    AddressValue remoteAddress1 (InetSocketAddress (star.GetSpokeIpv4Address(n1), port1));
+    onOffHelper1.SetAttribute ("Remote", remoteAddress1);
+
+    client1 = onOffHelper1.Install(csmaNodes2.Get(n9));
+
+    client1.Start (Seconds (5.0));
+    client1.Stop (Seconds (15.0));
+
+    //* TCP OnOff client n8 to n2
+
+
+    OnOffHelper onOffHelper2 ("ns3::TcpSocketFactory", InetSocketAddress(star.GetSpokeIpv4Address(1), port2));
+    onOffHelper2.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
+    onOffHelper2.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
+    onOffHelper2.SetAttribute ("PacketSize", UintegerValue(5000));
+
+    ApplicationContainer client2;
+    
+    AddressValue remoteAddress2 (InetSocketAddress (star.GetSpokeIpv4Address(1), port2));
+    onOffHelper2.SetAttribute ("Remote", remoteAddress2);
+
+    client2 = onOffHelper2.Install(csmaNodes2.Get(n8));
+
+    client2.Start (Seconds (2.0));
+    client2.Stop (Seconds (9.0));
+
+    char f[255];
+
+    sprintf(f, "task1-%d-%" PRIu32 ".tr", configuration, star.GetSpokeNode(n1)->GetId());
+    pointToPoint.EnableAscii(f,star.GetSpokeNode(n1)->GetDevice(0),true);
+
+    sprintf(f, "task1-%d-%" PRIu32 ".tr", configuration, star.GetSpokeNode(n2)->GetId());
+    pointToPoint.EnableAscii(f,star.GetSpokeNode(n2)->GetDevice(0),true);
+
+    sprintf(f, "task1-%d-%" PRIu32 ".tr", configuration, csmaNodes2.Get(n9)->GetId());
+    csma2.EnableAscii(f,csma2Devices.Get(n9),true);
+
+    sprintf(f, "task1-%d-%" PRIu32 ".tr", configuration, csmaNodes2.Get(8)->GetId());
+    csma2.EnableAscii(f,csma2Devices.Get(n8),true);
+    
   }else{
 //  TODO
   }
