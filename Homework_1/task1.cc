@@ -163,7 +163,7 @@ int main (int argc, char *argv[])
 
   NS_LOG_INFO ("Assign IP Addresses.");
   Ipv4AddressHelper Address;
-  Address.SetBase("10.1.1.0", "255.255.255.0");
+  Address.SetBase("10.0.1.0", "255.255.255.240");
   star.AssignIpv4Addresses (Address);
 
   
@@ -180,7 +180,7 @@ int main (int argc, char *argv[])
 
   
 
-  Address.SetBase("10.2.1.0", "255.255.255.252");
+  Address.SetBase("10.0.2.0", "255.255.255.252");
   Ipv4InterfaceContainer p2pAddresses;
   p2pAddresses = Address.Assign(csmaP2PDevices);
   
