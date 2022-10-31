@@ -134,7 +134,6 @@ int main (int argc, char *argv[])
   
 /*
   !! ## variables definitions ##
-
   ? netDevices
     
     * star
@@ -143,11 +142,9 @@ int main (int argc, char *argv[])
     * csmaP2PDevices 
   
   ? Helpers
-
     * star - PointToPoint
     * csma1 - csma2
     * p2pcsma
-
 */
 
   
@@ -221,6 +218,13 @@ int main (int argc, char *argv[])
     client.Start (Seconds (3.0));
     client.Stop (Seconds (15.0));
 
+    char f[255];
+
+    sprintf(f, "task1-%d-%" PRIu32 ".tr", configuration, star.GetSpokeNode(n1)->GetId());
+    pointToPoint.EnableAscii(f,star.GetSpokeNode(n1)->GetDevice(0),true);
+
+    sprintf(f, "task1-%d-%" PRIu32 ".tr", configuration, csmaNodes2.Get(n9)->GetId());
+    csma2.EnableAscii(f,csma2Devices.Get(n9),true);
 
 
   }else if (configuration == 1){
@@ -244,21 +248,21 @@ int main (int argc, char *argv[])
   char format[255];
 
 
-  sprintf(format, "task1-%d-%" PRIu32 , configuration, star.GetHub()->GetId());
+  sprintf(format, "task1-%d-%" PRIu32  ".pcap", configuration, star.GetHub()->GetId());
   pointToPoint.EnablePcap(format,star.GetHub()->GetDevice(0),true,true);
 
-  sprintf(format, "task1-%d-%" PRIu32, configuration, csmaNodes1.Get(n5)->GetId());
+  sprintf(format, "task1-%d-%" PRIu32 ".pcap", configuration, csmaNodes1.Get(n5)->GetId());
   csma1.EnablePcap(format,csma1Devices.Get(n5),true,true);
 
-  sprintf(format, "task1-%d-%" PRIu32, configuration, csmaNodes2.Get(n7)->GetId());
+  sprintf(format, "task1-%d-%" PRIu32 ".pcap", configuration, csmaNodes2.Get(n7)->GetId());
   csma2.EnablePcap(format,csma2Devices.Get(n7),true,true);
 
   // ? get n1 and n9 pcap files
 
-  sprintf(format, "task1-%d-%" PRIu32, configuration, csmaNodes2.Get(n9)->GetId());
+  sprintf(format, "task1-%d-%" PRIu32 ".pcap", configuration, csmaNodes2.Get(n9)->GetId());
   csma2.EnablePcap(format,csma2Devices.Get(n9),true,true);
 
-  sprintf(format, "task1-%d-%" PRIu32, configuration, star.GetSpokeNode(n1)->GetId());
+  sprintf(format, "task1-%d-%" PRIu32 ".pcap", configuration, star.GetSpokeNode(n1)->GetId());
   pointToPoint.EnablePcap(format,star.GetSpokeNode(n1)->GetDevice(0),true,true);
 
   NS_LOG_INFO ("Run Simulation.");
