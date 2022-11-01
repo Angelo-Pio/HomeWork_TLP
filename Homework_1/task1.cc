@@ -222,10 +222,10 @@ int main (int argc, char *argv[])
 
     char f[255];
 
-    sprintf(f, "task1-%d-%" PRIu32 ".tr", configuration, star.GetSpokeNode(n1)->GetId());
+    sprintf(f, "task1-%d-n%" PRIu32 ".tr", configuration, star.GetSpokeNode(n1)->GetId());
     pointToPoint.EnableAscii(f,star.GetSpokeNode(n1)->GetDevice(0),true);
 
-    sprintf(f, "task1-%d-%" PRIu32 ".tr", configuration, csmaNodes2.Get(n9)->GetId());
+    sprintf(f, "task1-%d-n%" PRIu32 ".tr", configuration, csmaNodes2.Get(n9)->GetId());
     csma2.EnableAscii(f,csma2Devices.Get(n9),true);
 
 
@@ -283,16 +283,16 @@ int main (int argc, char *argv[])
 
     char f[255];
 
-    sprintf(f, "task1-%d-%" PRIu32 ".tr", configuration, star.GetSpokeNode(n1)->GetId());
+    sprintf(f, "task1-%d-n%" PRIu32 ".tr", configuration, star.GetSpokeNode(n1)->GetId());
     pointToPoint.EnableAscii(f,star.GetSpokeNode(n1)->GetDevice(0),true);
 
-    sprintf(f, "task1-%d-%" PRIu32 ".tr", configuration, star.GetSpokeNode(n2)->GetId());
+    sprintf(f, "task1-%d-n%" PRIu32 ".tr", configuration, star.GetSpokeNode(n2)->GetId());
     pointToPoint.EnableAscii(f,star.GetSpokeNode(n2)->GetDevice(0),true);
 
-    sprintf(f, "task1-%d-%" PRIu32 ".tr", configuration, csmaNodes2.Get(n9)->GetId());
+    sprintf(f, "task1-%d-n%" PRIu32 ".tr", configuration, csmaNodes2.Get(n9)->GetId());
     csma2.EnableAscii(f,csma2Devices.Get(n9),true);
 
-    sprintf(f, "task1-%d-%" PRIu32 ".tr", configuration, csmaNodes2.Get(8)->GetId());
+    sprintf(f, "task1-%d-n%" PRIu32 ".tr", configuration, csmaNodes2.Get(8)->GetId());
     csma2.EnableAscii(f,csma2Devices.Get(n8),true);
     
   }else{
