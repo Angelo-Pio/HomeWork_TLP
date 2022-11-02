@@ -296,7 +296,89 @@ int main (int argc, char *argv[])
     csma2.EnableAscii(f,csma2Devices.Get(n8),true);
     
   }else{
-//  TODO
+    //* Create a UdpEchoServer application on nn2.
+    
+    uint16_t port2 = 63; 
+    UdpEchoServerHelper server2(port2);
+    ApplicationContainer apps2 = server2.Install(star.GetSpokeNode(1));
+    apps2.Start(Seconds(1.0));
+    apps2.Stop(Seconds(20.0));
+
+    //
+    //* Create a UdpEchoClient application to send UDP datagrams from n8 to n2
+    
+    //
+    uint32_t packetSize = 2500;
+    uint32_t maxPacketCount = 5;
+    Time interPacketInterval = Seconds(2.0);
+    UdpEchoClientHelper client2(star.GetSpokeIpv4Address(1), port2);
+    client2.SetAttribute("MaxPackets", UintegerValue(maxPacketCount));
+    client2.SetAttribute("Interval", TimeValue(interPacketInterval));
+    client2.SetAttribute("PacketSize", UintegerValue(packetSize));
+    apps2 = client2.Install(csmaNodes2.Get(n8));
+    apps2.Start(Seconds(3.0));
+    apps2.Stop(Seconds(10.0));  
+
+    client2.SetFill (apps2.Get (0), "Hello World");
+
+    client2.SetFill (apps2.Get (0), 0xa5, 1024);
+
+    uint8_t fill[] = { 0, 1, 2, 3, 4, 5, 6};
+    client2.SetFill (apps2.Get (0), fill, sizeof(fill), 1024);
+
+
+    // * TCP SINK n1
+
+    uint16_t port1 = 2600;
+    PacketSinkHelper sink1("ns3::TcpSocketFactory", InetSocketAddress(Ipv4Address::GetAny(), port1));
+    ApplicationContainer sinkApp1= sink1.Install(star.GetSpokeNode(n1));
+    sinkApp1.Start (Seconds (0));
+    sinkApp1.Stop (Seconds (20.0));
+
+    // * UDP sink n3
+
+    uint16_t port3 = 2500;
+    PacketSinkHelper sink3("ns3::UdpSocketFactory", InetSocketAddress(Ipv4Address::GetAny(), port3));
+    ApplicationContainer sinkApp3= sink3.Install(star.GetSpokeNode(n3));
+    sinkApp1.Start (Seconds (0));
+    sinkApp1.Stop (Seconds (20.0));
+
+    // * TCP OnOff Client n9
+
+    OnOffHelper onOffHelper9 ("ns3::TcpSocketFactory", InetSocketAddress(star.GetSpokeIpv4Address(n1), port1));
+    onOffHelper9.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
+    onOffHelper9.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
+    onOffHelper9.SetAttribute ("PacketSize", UintegerValue(3000));
+
+    ApplicationContainer client9;
+    
+    AddressValue remoteAddress9 (InetSocketAddress (star.GetSpokeIpv4Address(n1), port1));
+    onOffHelper9.SetAttribute ("Remote", remoteAddress9);
+
+    client9 = onOffHelper9.Install(csmaNodes2.Get(n9));
+
+    client9.Start (Seconds (3.0));
+    client9.Stop (Seconds (9.0));
+
+
+    // * TCP OnOff Client n8
+
+    OnOffHelper onOffHelper8 ("ns3::TcpSocketFactory", InetSocketAddress(star.GetSpokeIpv4Address(n3), port3));
+    onOffHelper8.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
+    onOffHelper8.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
+    onOffHelper8.SetAttribute ("PacketSize", UintegerValue(3000));
+
+    
+
+    ApplicationContainer client8;
+    
+    AddressValue remoteAddress8 (InetSocketAddress (star.GetSpokeIpv4Address(n3), port3));
+    onOffHelper8.SetAttribute ("Remote", remoteAddress8);
+
+    client8 = onOffHelper8.Install(csmaNodes2.Get(n8));
+
+    client8.Start (Seconds (5.0));
+    client8.Stop (Seconds (15.0));
   }
 
 
