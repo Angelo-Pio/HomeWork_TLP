@@ -77,7 +77,8 @@ int main (int argc, char *argv[])
 
   printf("configuration is: %d", configuration);
 
-
+  LogComponentEnable("UdpEchoClientApplication", LOG_LEVEL_INFO);
+  LogComponentEnable("UdpEchoServerApplication", LOG_LEVEL_INFO);
 
 // * ############################################# * 
   
@@ -300,7 +301,7 @@ int main (int argc, char *argv[])
     
     uint16_t port2 = 63; 
     UdpEchoServerHelper server2(port2);
-    ApplicationContainer apps2 = server2.Install(star.GetSpokeNode(1));
+    ApplicationContainer apps2 = server2.Install(star.GetSpokeNode(n2));
     apps2.Start(Seconds(1.0));
     apps2.Stop(Seconds(20.0));
 
@@ -308,15 +309,21 @@ int main (int argc, char *argv[])
     //* Create a UdpEchoClient application to send UDP datagrams from n8 to n2
     
     //
-    uint32_t packetSize = 2500;
+    uint32_t packetSize = 2560;
     uint32_t maxPacketCount = 5;
-    Time interPacketInterval = Seconds(2.0);
-    UdpEchoClientHelper client2(star.GetSpokeIpv4Address(1), port2);
+    Time interPacketInterval = Seconds(1.0);
+    UdpEchoClientHelper client2(star.GetSpokeIpv4Address(n2), port2);
     client2.SetAttribute("MaxPackets", UintegerValue(maxPacketCount));
     client2.SetAttribute("Interval", TimeValue(interPacketInterval));
     client2.SetAttribute("PacketSize", UintegerValue(packetSize));
     apps2 = client2.Install(csmaNodes2.Get(n8));
     apps2.Start(Seconds(3.0));
+    apps2.Stop(Seconds(5.0));
+
+    apps2.Start(Seconds(7.0));
+    apps2.Stop(Seconds(8.0));
+
+    apps2.Start(Seconds(9.0));
     apps2.Stop(Seconds(10.0));  
 
     client2.SetFill (apps2.Get (0), "Hello World");
@@ -361,9 +368,9 @@ int main (int argc, char *argv[])
     client9.Stop (Seconds (9.0));
 
 
-    // * TCP OnOff Client n8
+    // * UDP OnOff Client n8
 
-    OnOffHelper onOffHelper8 ("ns3::TcpSocketFactory", InetSocketAddress(star.GetSpokeIpv4Address(n3), port3));
+    OnOffHelper onOffHelper8 ("ns3::UdpSocketFactory", InetSocketAddress(star.GetSpokeIpv4Address(n3), port3));
     onOffHelper8.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
     onOffHelper8.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
     onOffHelper8.SetAttribute ("PacketSize", UintegerValue(3000));
@@ -396,26 +403,29 @@ int main (int argc, char *argv[])
   char format[255];
 
 
-  sprintf(format, "task1-%d-%" PRIu32  ".pcap", configuration, star.GetHub()->GetId());
+  sprintf(format, "task1-%d-n%" PRIu32  ".pcap", configuration, star.GetHub()->GetId());
   pointToPoint.EnablePcap(format,star.GetHub()->GetDevice(0),true,true);
 
-  sprintf(format, "task1-%d-%" PRIu32 ".pcap", configuration, csmaNodes1.Get(n5)->GetId());
+  sprintf(format, "task1-%d-n%" PRIu32 ".pcap", configuration, csmaNodes1.Get(n5)->GetId());
   csma1.EnablePcap(format,csma1Devices.Get(n5),true,true);
 
-  sprintf(format, "task1-%d-%" PRIu32 ".pcap", configuration, csmaNodes2.Get(n7)->GetId());
+  sprintf(format, "task1-%d-n%" PRIu32 ".pcap", configuration, csmaNodes2.Get(n7)->GetId());
   csma2.EnablePcap(format,csma2Devices.Get(n7),true,true);
 
   // ? get n1 and n9 pcap files
 
-  sprintf(format, "task1-%d-%" PRIu32 ".pcap", configuration, csmaNodes2.Get(n9)->GetId());
+  sprintf(format, "task1-%d-n%" PRIu32 ".pcap", configuration, csmaNodes2.Get(n9)->GetId());
   csma2.EnablePcap(format,csma2Devices.Get(n9),true,true);
 
-  sprintf(format, "task1-%d-%" PRIu32 ".pcap", configuration, star.GetSpokeNode(n1)->GetId());
+  sprintf(format, "task1-%d-n%" PRIu32 ".pcap", configuration, star.GetSpokeNode(n1)->GetId());
   pointToPoint.EnablePcap(format,star.GetSpokeNode(n1)->GetDevice(0),true,true);
 
   NS_LOG_INFO ("Run Simulation.");
+
   Simulator::Run ();
-  Simulator::Destroy ();
+  Simulator::Destroy();
+
+  
   NS_LOG_INFO ("Done.");
 
   return 0;
