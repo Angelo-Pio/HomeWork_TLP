@@ -77,11 +77,10 @@ int main (int argc, char *argv[])
 
   printf("configuration is: %d", configuration);
 
-  LogComponentEnable("UdpEchoClientApplication", LOG_LEVEL_INFO);
-  LogComponentEnable("UdpEchoServerApplication", LOG_LEVEL_INFO);
-  LogComponentEnable("OnOffApplication", LOG_LEVEL_INFO);
-  LogComponentEnable("PacketSink", LOG_LEVEL_INFO);
-  // LogComponentEnable("OnOffClientApplication", LOG_LEVEL_INFO);
+  // LogComponentEnable("UdpEchoClientApplication", LOG_LEVEL_INFO);
+  // LogComponentEnable("UdpEchoServerApplication", LOG_LEVEL_INFO);
+  // LogComponentEnable("OnOffApplication", LOG_LEVEL_INFO);
+  // LogComponentEnable("PacketSink", LOG_LEVEL_INFO);
   LogComponent::GetComponentList();
 // * ############################################# * 
   
@@ -246,7 +245,7 @@ int main (int argc, char *argv[])
 
     uint16_t port2 = 7777;
     PacketSinkHelper sink2 ("ns3::TcpSocketFactory", InetSocketAddress(Ipv4Address::GetAny(), port2));
-    ApplicationContainer sinkApp2 = sink2.Install(star.GetSpokeNode(1));
+    ApplicationContainer sinkApp2 = sink2.Install(star.GetSpokeNode(n2));
     sinkApp2.Start (Seconds (0));
     sinkApp2.Stop (Seconds (20.0));
 
@@ -270,14 +269,14 @@ int main (int argc, char *argv[])
     //* TCP OnOff client n8 to n2
 
 
-    OnOffHelper onOffHelper2 ("ns3::TcpSocketFactory", InetSocketAddress(star.GetSpokeIpv4Address(1), port2));
+    OnOffHelper onOffHelper2 ("ns3::TcpSocketFactory", InetSocketAddress(star.GetSpokeIpv4Address(n2), port2));
     onOffHelper2.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
     onOffHelper2.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
     onOffHelper2.SetAttribute ("PacketSize", UintegerValue(5000));
 
     ApplicationContainer client2;
     
-    AddressValue remoteAddress2 (InetSocketAddress (star.GetSpokeIpv4Address(1), port2));
+    AddressValue remoteAddress2 (InetSocketAddress (star.GetSpokeIpv4Address(n2), port2));
     onOffHelper2.SetAttribute ("Remote", remoteAddress2);
 
     client2 = onOffHelper2.Install(csmaNodes2.Get(n8));
