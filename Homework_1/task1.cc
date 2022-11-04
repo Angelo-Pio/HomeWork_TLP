@@ -79,7 +79,10 @@ int main (int argc, char *argv[])
 
   LogComponentEnable("UdpEchoClientApplication", LOG_LEVEL_INFO);
   LogComponentEnable("UdpEchoServerApplication", LOG_LEVEL_INFO);
-
+  LogComponentEnable("OnOffApplication", LOG_LEVEL_INFO);
+  LogComponentEnable("PacketSink", LOG_LEVEL_INFO);
+  // LogComponentEnable("OnOffClientApplication", LOG_LEVEL_INFO);
+  LogComponent::GetComponentList();
 // * ############################################# * 
   
   NS_LOG_INFO ("Build star topology.");
@@ -187,7 +190,7 @@ int main (int argc, char *argv[])
   Ipv4InterfaceContainer p2pAddresses;
   p2pAddresses = Address.Assign(csmaP2PDevices);
   
-  printNodesIP( star,  c1Addresses,  c2Addresses, csmaNodes1, csmaNodes2 );
+  // printNodesIP( star,  c1Addresses,  c2Addresses, csmaNodes1, csmaNodes2 );
   
 // ! ####################### TASKS ################################
 
@@ -293,15 +296,15 @@ int main (int argc, char *argv[])
     sprintf(f, "task1-%d-n%" PRIu32 ".tr", configuration, csmaNodes2.Get(n9)->GetId());
     csma2.EnableAscii(f,csma2Devices.Get(n9),true);
 
-    sprintf(f, "task1-%d-n%" PRIu32 ".tr", configuration, csmaNodes2.Get(8)->GetId());
+    sprintf(f, "task1-%d-n%" PRIu32 ".tr", configuration, csmaNodes2.Get(n8)->GetId());
     csma2.EnableAscii(f,csma2Devices.Get(n8),true);
     
   }else{
-    //* Create a UdpEchoServer application on nn2.
+//* Create a UdpEchoServer application on nn2.
     
     uint16_t port2 = 63; 
     UdpEchoServerHelper server2(port2);
-    ApplicationContainer apps2 = server2.Install(star.GetSpokeNode(n2));
+    ApplicationContainer apps2 = server2.Install(star.GetSpokeNode(1));
     apps2.Start(Seconds(1.0));
     apps2.Stop(Seconds(20.0));
 
@@ -311,27 +314,21 @@ int main (int argc, char *argv[])
     //
     uint32_t packetSize = 2560;
     uint32_t maxPacketCount = 5;
-    Time interPacketInterval = Seconds(1.0);
-    UdpEchoClientHelper client2(star.GetSpokeIpv4Address(n2), port2);
+    Time interPacketInterval = Seconds(2.0);
+    UdpEchoClientHelper client2(star.GetSpokeIpv4Address(1), port2);
     client2.SetAttribute("MaxPackets", UintegerValue(maxPacketCount));
     client2.SetAttribute("Interval", TimeValue(interPacketInterval));
     client2.SetAttribute("PacketSize", UintegerValue(packetSize));
     apps2 = client2.Install(csmaNodes2.Get(n8));
     apps2.Start(Seconds(3.0));
-    apps2.Stop(Seconds(5.0));
+    apps2.Stop(Seconds(12.0));  
 
-    apps2.Start(Seconds(7.0));
-    apps2.Stop(Seconds(8.0));
+    client2.SetFill (apps2.Get (0), "7856807");
 
-    apps2.Start(Seconds(9.0));
-    apps2.Stop(Seconds(10.0));  
-
-    client2.SetFill (apps2.Get (0), "Hello World");
-
-    client2.SetFill (apps2.Get (0), 0xa5, 1024);
+    client2.SetFill (apps2.Get (0), 0xa5, packetSize);
 
     uint8_t fill[] = { 0, 1, 2, 3, 4, 5, 6};
-    client2.SetFill (apps2.Get (0), fill, sizeof(fill), 1024);
+    client2.SetFill (apps2.Get (0), fill, sizeof(fill), packetSize);
 
 
     // * TCP SINK n1
@@ -368,7 +365,7 @@ int main (int argc, char *argv[])
     client9.Stop (Seconds (9.0));
 
 
-    // * UDP OnOff Client n8
+    // *  Udp OnOff Client n8
 
     OnOffHelper onOffHelper8 ("ns3::UdpSocketFactory", InetSocketAddress(star.GetSpokeIpv4Address(n3), port3));
     onOffHelper8.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
@@ -386,6 +383,23 @@ int main (int argc, char *argv[])
 
     client8.Start (Seconds (5.0));
     client8.Stop (Seconds (15.0));
+
+    char f[255] ;
+    sprintf(f, "task1-%d-n%" PRIu32 ".tr", configuration, star.GetSpokeNode(n1)->GetId());
+    pointToPoint.EnableAscii(f,star.GetSpokeNode(n1)->GetDevice(0),true);
+
+    sprintf(f, "task1-%d-n%" PRIu32 ".tr", configuration, star.GetSpokeNode(n2)->GetId());
+    pointToPoint.EnableAscii(f,star.GetSpokeNode(n2)->GetDevice(0),true);
+
+    sprintf(f, "task1-%d-n%" PRIu32 ".tr", configuration, star.GetSpokeNode(n3)->GetId());
+    pointToPoint.EnableAscii(f,star.GetSpokeNode(n3)->GetDevice(0),true);
+
+    sprintf(f, "task1-%d-n%" PRIu32 ".tr", configuration, csmaNodes2.Get(n9)->GetId());
+    csma2.EnableAscii(f,csma2Devices.Get(n9),true);
+
+    sprintf(f, "task1-%d-n%" PRIu32 ".tr", configuration, csmaNodes2.Get(n8)->GetId());
+    csma2.EnableAscii(f,csma2Devices.Get(n8),true);
+
   }
 
 
