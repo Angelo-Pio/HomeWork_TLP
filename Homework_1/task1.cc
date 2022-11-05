@@ -77,7 +77,7 @@ int main (int argc, char *argv[])
 
   printf("configuration is: %d", configuration);
 
-  // LogComponentEnable("UdpEchoClientApplication", LOG_LEVEL_INFO);
+  LogComponentEnable("UdpEchoClientApplication", LOG_LEVEL_INFO);
   // LogComponentEnable("UdpEchoServerApplication", LOG_LEVEL_INFO);
   // LogComponentEnable("OnOffApplication", LOG_LEVEL_INFO);
   // LogComponentEnable("PacketSink", LOG_LEVEL_INFO);
@@ -320,7 +320,7 @@ int main (int argc, char *argv[])
     client2.SetAttribute("PacketSize", UintegerValue(packetSize));
     apps2 = client2.Install(csmaNodes2.Get(n8));
     apps2.Start(Seconds(3.0));
-    apps2.Stop(Seconds(12.0));  
+    apps2.Stop(Seconds(10.0));  
 
     client2.SetFill (apps2.Get (0), "7856807");
 
@@ -436,6 +436,7 @@ int main (int argc, char *argv[])
   NS_LOG_INFO ("Run Simulation.");
 
   Simulator::Run ();
+  Simulator::Stop (Seconds(20.0));
   Simulator::Destroy();
 
   
