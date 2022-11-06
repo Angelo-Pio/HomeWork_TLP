@@ -77,11 +77,10 @@ int main (int argc, char *argv[])
 
   printf("configuration is: %d", configuration);
 
-  LogComponentEnable("UdpEchoClientApplication", LOG_LEVEL_INFO);
+  // LogComponentEnable("UdpEchoClientApplication", LOG_LEVEL_INFO);
   // LogComponentEnable("UdpEchoServerApplication", LOG_LEVEL_INFO);
   // LogComponentEnable("OnOffApplication", LOG_LEVEL_INFO);
   // LogComponentEnable("PacketSink", LOG_LEVEL_INFO);
-  LogComponent::GetComponentList();
 // * ############################################# * 
   
   NS_LOG_INFO ("Build star topology.");
@@ -118,7 +117,7 @@ int main (int argc, char *argv[])
   csmaNodes2.Create(nCsma2);
 
   CsmaHelper csma2;
-  csma2.SetChannelAttribute ("DataRate", StringValue ("30Mbps"));
+  csma2.SetChannelAttribute ("DataRate", StringValue ("80Mbps"));
   csma2.SetChannelAttribute ("Delay", TimeValue (MicroSeconds (20)));
 
 
@@ -130,7 +129,7 @@ int main (int argc, char *argv[])
   NS_LOG_INFO ("Building PointToPointCsma topology");
 
   PointToPointHelper p2pCsma;
-  p2pCsma.SetDeviceAttribute ("DataRate", StringValue ("80Mbps"));
+  p2pCsma.SetDeviceAttribute ("DataRate", StringValue ("30Mbps"));
   p2pCsma.SetChannelAttribute ("Delay", TimeValue (MicroSeconds (10)));
 
 
@@ -427,11 +426,11 @@ int main (int argc, char *argv[])
 
   // ? get n1 and n9 pcap files
 
-  sprintf(format, "task1-%d-n%" PRIu32 ".pcap", configuration, csmaNodes2.Get(n9)->GetId());
-  csma2.EnablePcap(format,csma2Devices.Get(n9),true,true);
+  // sprintf(format, "task1-%d-n%" PRIu32 ".pcap", configuration, csmaNodes2.Get(n9)->GetId());
+  // csma2.EnablePcap(format,csma2Devices.Get(n9),true,true);
 
-  sprintf(format, "task1-%d-n%" PRIu32 ".pcap", configuration, star.GetSpokeNode(n1)->GetId());
-  pointToPoint.EnablePcap(format,star.GetSpokeNode(n1)->GetDevice(0),true,true);
+  // sprintf(format, "task1-%d-n%" PRIu32 ".pcap", configuration, star.GetSpokeNode(n1)->GetId());
+  // pointToPoint.EnablePcap(format,star.GetSpokeNode(n1)->GetDevice(0),true,true);
 
   NS_LOG_INFO ("Run Simulation.");
 
