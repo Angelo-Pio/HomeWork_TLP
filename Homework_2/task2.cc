@@ -26,18 +26,6 @@
 #include "ns3/yans-wifi-helper.h"
 #include "ns3/animation-interface.h"
 
-// Default Network Topology
-//
-//   Wifi 10.1.3.0
-//                 AP
-//  *    *    *    *
-//  |    |    |    |    10.1.1.0
-// n5   n6   n7   n0 -------------- n1   n2   n3   n4
-//                   point-to-point  |    |    |    |
-//                                   ================
-//                                     LAN 10.1.2.0
-
-
 #define n0 0
 #define n3 2
 #define n4 3
@@ -74,6 +62,12 @@ int main(int argc, char* argv[])
 
 // ! Enabling Logging on application
 
+    // * Tracing
+
+    if(verbose == true){
+        LogComponentEnable("UdpEchoClientApplication", LOG_LEVEL_INFO);
+        LogComponentEnable("UdpEchoServerApplication", LOG_LEVEL_INFO);
+    }
 
 // ! CONFIGURATION BEGIN
 
@@ -140,8 +134,21 @@ int main(int argc, char* argv[])
     Ipv4AddressHelper address;
 
     address.SetBase("192.168.1.0", "255.255.255.0");
-    address.Assign(apDevices);
-    address.Assign(staDevices);
+    Ipv4InterfaceContainer apInterface;
+    Ipv4InterfaceContainer staInterface;
+    apInterface = address.Assign(apDevices);
+    staInterface =  address.Assign(staDevices);
+
+    if(useRtsCts == true){
+        Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("100"));
+        phy.EnablePcap("task2-on-4.pcap",staDevices.Get(n4),true,true);
+        phy.EnablePcap("task2-on-AP.pcap",apDevices.Get(n0),true,true);
+    }else{
+        phy.EnablePcap("task2-off-4.pcap",staDevices.Get(n4),true,true);
+        phy.EnablePcap("task2-off-AP.pcap",apDevices.Get(n0),true,true);
+
+    }
+
 
 // * Server
 
@@ -150,9 +157,10 @@ int main(int argc, char* argv[])
     // serverApps.Start(Seconds(1.0));
     // serverApps.Stop(Seconds(10.0));
 
+
 // * CLient 1
 
-    UdpEchoClientHelper echoClient1(staDevices.Get(n3)->GetAddress(), UDP_PORT);
+    UdpEchoClientHelper echoClient1(staInterface.GetAddress(n3), UDP_PORT);
     echoClient1.SetAttribute("MaxPackets", UintegerValue(npackets));
     echoClient1.SetAttribute("Interval", TimeValue(Seconds(2.0)));
     echoClient1.SetAttribute("PacketSize", UintegerValue(packetSize));
@@ -162,7 +170,7 @@ int main(int argc, char* argv[])
     client1.Stop(Seconds(4.0));
 
 // * CLient 2
-    UdpEchoClientHelper echoClient2(staDevices.Get(n4)->GetAddress(),UDP_PORT);
+    UdpEchoClientHelper echoClient2(staInterface.GetAddress(n4),UDP_PORT);
     echoClient2.SetAttribute("MaxPackets", UintegerValue(npackets));
     echoClient2.SetAttribute("Interval", TimeValue(Seconds(3.0)));
     echoClient2.SetAttribute("PacketSize", UintegerValue(packetSize));
@@ -176,31 +184,25 @@ int main(int argc, char* argv[])
     Ipv4GlobalRoutingHelper::PopulateRoutingTables();
 
 
-// * Tracing
+    Simulator::Stop(Seconds(7.0));
 
-    if(verbose){
-        LogComponentEnable("UdpEchoClientApplication", LOG_LEVEL_INFO);
-        LogComponentEnable("UdpEchoServerApplication", LOG_LEVEL_INFO);
-    }
-    phy.EnablePcap("task2-4.pcap",staDevices.Get(n4),true,true);
-    phy.EnablePcap("task2-AP.pcap",apDevices.Get(n0),true,true);
 
 // * NetAnim
-
-    if(useNetAnim){
+    if(useNetAnim == true){
 
         char str[40];
-        if(useRtsCts){
+        
+        if(useRtsCts == true){
             sprintf(str,"wireless-task2-rts-on.xml") ;
         }else{
             sprintf(str,"wireless-task2-rts-off.xml") ;
         }
 
         AnimationInterface anim(str); // Mandatory
-        for (uint32_t i = 0; i < wifiStaNodes.GetN(); ++i)
+        for (uint32_t i = 0; i < nStations; i++)
         {
             Ptr<Node> node = wifiStaNodes.Get(i);
-            char f[10];
+            char f[20];
             if(i == n0){
                 sprintf(f,"SRV-%" PRIu32, node->GetId());
                 anim.UpdateNodeDescription(node,f); // Optional
@@ -226,20 +228,13 @@ int main(int argc, char* argv[])
                                     Seconds(0),
                                     Seconds(5),
                                     Seconds(0.25));         // Optional
-        anim.EnableWifiMacCounters(Seconds(0), Seconds(10)); // Optional
-        anim.EnableWifiPhyCounters(Seconds(0), Seconds(10)); // Optional
+
+        // TODO ERROR HERE, THESE TWO LINES BELOW MAKE PROGRAM CRASH
+        anim.EnableWifiMacCounters(Seconds(0), Seconds(4)); // Optional
+        anim.EnableWifiPhyCounters(Seconds(0), Seconds(4)); // Optional
 
     }
 
-    if(useRtsCts){
-        Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("100"));
-    }
-
-
-
-
-
-    Simulator::Stop(Seconds(5.0));
     Simulator::Run();
     Simulator::Destroy();
     return 0;
