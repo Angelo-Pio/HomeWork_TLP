@@ -37,7 +37,7 @@
 //                                   ================
 //                                     LAN 10.1.2.0
 
-#define UDP_PORT 21
+
 #define n0 0
 #define n3 2
 #define n4 3
@@ -54,12 +54,13 @@ int main(int argc, char* argv[])
 
     uint32_t nStations = 5;
     uint32_t nAPnodes = 1;
+    uint16_t UDP_PORT = 21;
     bool useRtsCts = false;
     bool useNetAnim = false;
     bool verbose = false;
-
     // For simulation purposes use ssid = 7856807
-    char* ssid = "TLC2022";
+    std::string ssid ="TLC2022";
+    
 
 // ! Command line arguments
 
@@ -69,16 +70,9 @@ int main(int argc, char* argv[])
     cmd.AddValue("useNetAnim", "Generate netanim files related ", useNetAnim );
     cmd.AddValue("verbose", "Generate netanim files related ", verbose );
 
-    if(ssid == "TLC2022"){
-        std::cout << "using default ssid" << std::endl;
-    }
-
     cmd.Parse(argc, argv);
 
 // ! Enabling Logging on application
-
-//  TODO change application
-
 
 
 // ! CONFIGURATION BEGIN
@@ -146,19 +140,19 @@ int main(int argc, char* argv[])
     Ipv4AddressHelper address;
 
     address.SetBase("192.168.1.0", "255.255.255.0");
-    address.Assign(staDevices);
     address.Assign(apDevices);
+    address.Assign(staDevices);
 
 // * Server
 
     UdpEchoServerHelper echoServer(UDP_PORT);
-    ApplicationContainer serverApps = echoServer.Install(staDevices.Get(n0));
+    ApplicationContainer serverApps = echoServer.Install(wifiStaNodes.Get(n0));
     // serverApps.Start(Seconds(1.0));
     // serverApps.Stop(Seconds(10.0));
 
 // * CLient 1
 
-    UdpEchoClientHelper echoClient1(staDevices.Get(n3), UDP_PORT);
+    UdpEchoClientHelper echoClient1(staDevices.Get(n3)->GetAddress(), UDP_PORT);
     echoClient1.SetAttribute("MaxPackets", UintegerValue(npackets));
     echoClient1.SetAttribute("Interval", TimeValue(Seconds(2.0)));
     echoClient1.SetAttribute("PacketSize", UintegerValue(packetSize));
@@ -168,7 +162,7 @@ int main(int argc, char* argv[])
     client1.Stop(Seconds(4.0));
 
 // * CLient 2
-    UdpEchoClientHelper echoClient2(staDevices.Get(n4), UDP_PORT);
+    UdpEchoClientHelper echoClient2(staDevices.Get(n4)->GetAddress(),UDP_PORT);
     echoClient2.SetAttribute("MaxPackets", UintegerValue(npackets));
     echoClient2.SetAttribute("Interval", TimeValue(Seconds(3.0)));
     echoClient2.SetAttribute("PacketSize", UintegerValue(packetSize));
@@ -188,18 +182,18 @@ int main(int argc, char* argv[])
         LogComponentEnable("UdpEchoClientApplication", LOG_LEVEL_INFO);
         LogComponentEnable("UdpEchoServerApplication", LOG_LEVEL_INFO);
     }
-    phy.EnablePcap("task2-4.pcap",wifiStaNodes.Get(n4),true,true);
-    phy.EnablePcap("task2-AP.pcap",wifiApNode.Get(n0),true,true);
+    phy.EnablePcap("task2-4.pcap",staDevices.Get(n4),true,true);
+    phy.EnablePcap("task2-AP.pcap",apDevices.Get(n0),true,true);
 
 // * NetAnim
 
     if(useNetAnim){
 
-        char* str;
+        char str[40];
         if(useRtsCts){
-            str = "wireless-task2-rts-on.xml" ;
+            sprintf(str,"wireless-task2-rts-on.xml") ;
         }else{
-            str = "wireless-task2-rts-off.xml" ;
+            sprintf(str,"wireless-task2-rts-off.xml") ;
         }
 
         AnimationInterface anim(str); // Mandatory
@@ -208,17 +202,14 @@ int main(int argc, char* argv[])
             Ptr<Node> node = wifiStaNodes.Get(i);
             char f[10];
             if(i == n0){
-                free(f);
                 sprintf(f,"SRV-%" PRIu32, node->GetId());
                 anim.UpdateNodeDescription(node,f); // Optional
                 anim.UpdateNodeColor(node->GetId(),255,0,0);
             }else if(i == n3 || i == n4 ){
-                free(f);
                 sprintf(f,"CLi-%" PRIu32, node->GetId());
                 anim.UpdateNodeDescription(node,f); // Optional
                 anim.UpdateNodeColor(node->GetId(),0,255,0);
             }else{
-                free(f);
                 sprintf(f,"STA-%" PRIu32, node->GetId());
                 anim.UpdateNodeDescription(node,f); // Optional
                 anim.UpdateNodeColor(node->GetId(),0,0,255);
@@ -248,7 +239,7 @@ int main(int argc, char* argv[])
 
 
 
-    Simulator::Stop(Seconds(10.0));
+    Simulator::Stop(Seconds(5.0));
     Simulator::Run();
     Simulator::Destroy();
     return 0;
