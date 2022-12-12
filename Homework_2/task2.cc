@@ -54,9 +54,9 @@ int main(int argc, char* argv[])
 
     CommandLine cmd(__FILE__);
     cmd.AddValue("ssid", "Insert LAN SSID", ssid);
+    cmd.AddValue("verbose", "Generate netanim files related ", verbose );
     cmd.AddValue("useRtsCts", "Abilitate use of RTS-CTS mechanism", useRtsCts);
     cmd.AddValue("useNetAnim", "Generate netanim files related ", useNetAnim );
-    cmd.AddValue("verbose", "Generate netanim files related ", verbose );
 
     cmd.Parse(argc, argv);
 
@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
     Ssid ssid_value = Ssid(ssid);
 
     WifiHelper wifi;
-    wifi.EnableLogComponents(); // * Set wifi log component and the standard for wifi
+    // wifi.EnableLogComponents(); // * Set wifi log component and the standard for wifi
     wifi.SetStandard(WIFI_STANDARD_80211g);
     wifi.SetRemoteStationManager("ns3::AarfWifiManager");
 
@@ -139,6 +139,8 @@ int main(int argc, char* argv[])
     apInterface = address.Assign(apDevices);
     staInterface =  address.Assign(staDevices);
 
+    phy.SetPcapDataLinkType(WifiPhyHelper::DLT_IEEE802_11_RADIO);
+
     if(useRtsCts == true){
         Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("100"));
         phy.EnablePcap("task2-on-4.pcap",staDevices.Get(n4),true,true);
@@ -146,7 +148,7 @@ int main(int argc, char* argv[])
     }else{
         phy.EnablePcap("task2-off-4.pcap",staDevices.Get(n4),true,true);
         phy.EnablePcap("task2-off-AP.pcap",apDevices.Get(n0),true,true);
-
+        
     }
 
 
@@ -160,7 +162,7 @@ int main(int argc, char* argv[])
 
 // * CLient 1
 
-    UdpEchoClientHelper echoClient1(staInterface.GetAddress(n3), UDP_PORT);
+    UdpEchoClientHelper echoClient1(apInterface.GetAddress(n0), UDP_PORT);
     echoClient1.SetAttribute("MaxPackets", UintegerValue(npackets));
     echoClient1.SetAttribute("Interval", TimeValue(Seconds(2.0)));
     echoClient1.SetAttribute("PacketSize", UintegerValue(packetSize));
@@ -170,7 +172,7 @@ int main(int argc, char* argv[])
     client1.Stop(Seconds(4.0));
 
 // * CLient 2
-    UdpEchoClientHelper echoClient2(staInterface.GetAddress(n4),UDP_PORT);
+    UdpEchoClientHelper echoClient2(apInterface.GetAddress(n0),UDP_PORT);
     echoClient2.SetAttribute("MaxPackets", UintegerValue(npackets));
     echoClient2.SetAttribute("Interval", TimeValue(Seconds(3.0)));
     echoClient2.SetAttribute("PacketSize", UintegerValue(packetSize));
@@ -184,7 +186,6 @@ int main(int argc, char* argv[])
     Ipv4GlobalRoutingHelper::PopulateRoutingTables();
 
 
-    Simulator::Stop(Seconds(7.0));
 
 
 // * NetAnim
@@ -224,18 +225,23 @@ int main(int argc, char* argv[])
               
 
         anim.EnablePacketMetadata(); // Optional
-        anim.EnableIpv4RouteTracking("routingtable-wireless.xml",
-                                    Seconds(0),
-                                    Seconds(5),
-                                    Seconds(0.25));         // Optional
+        anim.EnableWifiMacCounters(Seconds(0), Seconds(10)); // Optional
+        anim.EnableWifiPhyCounters(Seconds(0), Seconds(10)); // Optional
 
-        // TODO ERROR HERE, THESE TWO LINES BELOW MAKE PROGRAM CRASH
-        anim.EnableWifiMacCounters(Seconds(0), Seconds(4)); // Optional
-        anim.EnableWifiPhyCounters(Seconds(0), Seconds(4)); // Optional
+        // anim.EnableIpv4RouteTracking("routingtable-wireless.xml",
+        //                             Seconds(0),
+        //                             Seconds(5),
+        //                             Seconds(0.25));         // Optional
 
+
+        Simulator::Stop(Seconds(10.0));
+        Simulator::Run();
+        Simulator::Destroy();
+    }else{
+
+        Simulator::Stop(Seconds(10.0));
+        Simulator::Run();
+        Simulator::Destroy();
     }
-
-    Simulator::Run();
-    Simulator::Destroy();
     return 0;
 }
