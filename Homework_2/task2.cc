@@ -86,8 +86,8 @@ int main(int argc, char* argv[])
 
     WifiHelper wifi;
     // wifi.EnableLogComponents(); // * Set wifi log component and the standard for wifi
-    wifi.SetStandard(WIFI_STANDARD_80211g);
     wifi.SetRemoteStationManager("ns3::AarfWifiManager");
+    wifi.SetStandard(WifiStandard(WIFI_STANDARD_80211g));
 
 // * MAC
     NetDeviceContainer staDevices;
@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
     staInterface =  address.Assign(staDevices);
 
 // ! This should not be here
-    phy.SetPcapDataLinkType(WifiPhyHelper::DLT_IEEE802_11_RADIO);
+    // phy.SetPcapDataLinkType(WifiPhyHelper::DLT_IEEE802_11);
 
     if(useRtsCts == true){
         Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("100"));
