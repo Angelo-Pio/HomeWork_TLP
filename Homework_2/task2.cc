@@ -139,15 +139,22 @@ int main(int argc, char* argv[])
     apInterface = address.Assign(apDevices);
     staInterface =  address.Assign(staDevices);
 
+// ! This should not be here
     phy.SetPcapDataLinkType(WifiPhyHelper::DLT_IEEE802_11_RADIO);
 
     if(useRtsCts == true){
         Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("100"));
         phy.EnablePcap("task2-on-4.pcap",staDevices.Get(n4),true,true);
         phy.EnablePcap("task2-on-AP.pcap",apDevices.Get(n0),true,true);
+        
+        // * Testing purposes
+        phy.EnablePcap("task2-on-3.pcap",staDevices.Get(n3),true,true);
     }else{
         phy.EnablePcap("task2-off-4.pcap",staDevices.Get(n4),true,true);
         phy.EnablePcap("task2-off-AP.pcap",apDevices.Get(n0),true,true);
+
+        // * Testing purposes
+        phy.EnablePcap("task2-on-3.pcap",staDevices.Get(n3),true,true);
         
     }
 
@@ -169,7 +176,7 @@ int main(int argc, char* argv[])
 
     ApplicationContainer client1 = echoClient1.Install(wifiStaNodes.Get(n3));
     client1.Start(Seconds(2.0));
-    client1.Stop(Seconds(4.0));
+    client1.Stop(Seconds(5.0));
 
 // * CLient 2
     UdpEchoClientHelper echoClient2(apInterface.GetAddress(n0),UDP_PORT);
@@ -179,7 +186,7 @@ int main(int argc, char* argv[])
     
     ApplicationContainer client2 = echoClient2.Install(wifiStaNodes.Get(n4));
     client2.Start(Seconds(1.0));
-    client2.Stop(Seconds(4.0));
+    client2.Stop(Seconds(5.0));
 
 // * Routing Table
 
@@ -228,10 +235,10 @@ int main(int argc, char* argv[])
         anim.EnableWifiMacCounters(Seconds(0), Seconds(10)); // Optional
         anim.EnableWifiPhyCounters(Seconds(0), Seconds(10)); // Optional
 
-        // anim.EnableIpv4RouteTracking("routingtable-wireless.xml",
-        //                             Seconds(0),
-        //                             Seconds(5),
-        //                             Seconds(0.25));         // Optional
+        anim.EnableIpv4RouteTracking("routingtable-wireless.xml",
+                                    Seconds(0),
+                                    Seconds(5),
+                                    Seconds(0.25));         // Optional
 
 
         Simulator::Stop(Seconds(10.0));
