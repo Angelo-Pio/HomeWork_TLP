@@ -25,6 +25,8 @@
 #include "ns3/ssid.h"
 #include "ns3/yans-wifi-helper.h"
 #include "ns3/animation-interface.h"
+#include "ns3/config-store.h"
+#include "ns3/aarf-wifi-manager.h"
 
 #define n0 0
 #define n3 2
@@ -69,34 +71,54 @@ int main(int argc, char* argv[])
         LogComponentEnable("UdpEchoServerApplication", LOG_LEVEL_INFO);
     }
 
+    if(useRtsCts == true){
+        Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("100"));
+    }
 // ! CONFIGURATION BEGIN
 
     NodeContainer wifiStaNodes;
-    wifiStaNodes.Create(nStations);
-
     NodeContainer wifiApNode;
+    WifiHelper wifi ;
+    YansWifiPhyHelper phy;
+    WifiMacHelper mac;
+
+    wifiStaNodes.Create(nStations);
     wifiApNode.Create(nAPnodes);
 
+    wifi.SetStandard(WifiStandard::WIFI_STANDARD_80211g);
+    wifi.SetRemoteStationManager("ns3::ArfWifiManager");
+
     YansWifiChannelHelper channel = YansWifiChannelHelper::Default();
-    YansWifiPhyHelper phy;
+    phy.SetPcapDataLinkType(WifiPhyHelper::DLT_IEEE802_11_RADIO);
     phy.SetChannel(channel.Create());
+    Ssid ssid_value = Ssid(ssid); 
 
-    WifiMacHelper mac;
-    Ssid ssid_value = Ssid(ssid);
 
-    WifiHelper wifi;
+
+    
     // wifi.EnableLogComponents(); // * Set wifi log component and the standard for wifi
-    wifi.SetRemoteStationManager("ns3::AarfWifiManager");
-    wifi.SetStandard(WifiStandard(WIFI_STANDARD_80211g));
 
 // * MAC
+
     NetDeviceContainer staDevices;
     mac.SetType("ns3::StaWifiMac", "Ssid", SsidValue(ssid_value), "ActiveProbing", BooleanValue(false));
     staDevices = wifi.Install(phy, mac, wifiStaNodes);
-
     NetDeviceContainer apDevices;
     mac.SetType("ns3::ApWifiMac", "Ssid", SsidValue(ssid_value));
     apDevices = wifi.Install(phy, mac, wifiApNode);
+
+
+// * PCAP files
+    const char* name4 = useRtsCts == true ? "task2-on-4.pcap" : "task2-off-4.pcap";
+    const char* nameAP = useRtsCts == true ? "task2-on-AP.pcap" : "task2-off-AP.pcap";
+    
+    phy.EnablePcap(name4,staDevices.Get(n4),true,true);
+    phy.EnablePcap(nameAP,apDevices.Get(n0),true,true);
+
+    // * Testing purposes
+    const char* name3 = useRtsCts == true ? "task2-on-3.pcap" : "task2-off-3.pcap";
+    phy.EnablePcap(name3,staDevices.Get(n3),true,true);
+    
 
 // * Mobility
 
@@ -139,24 +161,8 @@ int main(int argc, char* argv[])
     apInterface = address.Assign(apDevices);
     staInterface =  address.Assign(staDevices);
 
-// ! This should not be here
-    // phy.SetPcapDataLinkType(WifiPhyHelper::DLT_IEEE802_11);
 
-    if(useRtsCts == true){
-        Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("100"));
-        phy.EnablePcap("task2-on-4.pcap",staDevices.Get(n4),true,true);
-        phy.EnablePcap("task2-on-AP.pcap",apDevices.Get(n0),true,true);
-        
-        // * Testing purposes
-        phy.EnablePcap("task2-on-3.pcap",staDevices.Get(n3),true,true);
-    }else{
-        phy.EnablePcap("task2-off-4.pcap",staDevices.Get(n4),true,true);
-        phy.EnablePcap("task2-off-AP.pcap",apDevices.Get(n0),true,true);
-
-        // * Testing purposes
-        phy.EnablePcap("task2-on-3.pcap",staDevices.Get(n3),true,true);
-        
-    }
+  
 
 
 // * Server
@@ -250,5 +256,6 @@ int main(int argc, char* argv[])
         Simulator::Run();
         Simulator::Destroy();
     }
+
     return 0;
 }
