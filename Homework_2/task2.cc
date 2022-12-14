@@ -71,9 +71,8 @@ int main(int argc, char* argv[])
         LogComponentEnable("UdpEchoServerApplication", LOG_LEVEL_INFO);
     }
 
-    if(useRtsCts == true){
-        Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("100"));
-    }
+    UintegerValue ctsThr = (useRtsCts ? UintegerValue(100) : UintegerValue(2200));
+    Config::SetDefault("ns3::WifiRemoteStationManager::RtsCtsThreshold", ctsThr);
 // ! CONFIGURATION BEGIN
 
     NodeContainer wifiStaNodes;
@@ -175,7 +174,7 @@ int main(int argc, char* argv[])
 
 // * CLient 1
 
-    UdpEchoClientHelper echoClient1(apInterface.GetAddress(n0), UDP_PORT);
+    UdpEchoClientHelper echoClient1(staInterface.GetAddress(n0), UDP_PORT);
     echoClient1.SetAttribute("MaxPackets", UintegerValue(npackets));
     echoClient1.SetAttribute("Interval", TimeValue(Seconds(2.0)));
     echoClient1.SetAttribute("PacketSize", UintegerValue(packetSize));
@@ -185,7 +184,7 @@ int main(int argc, char* argv[])
     client1.Stop(Seconds(5.0));
 
 // * CLient 2
-    UdpEchoClientHelper echoClient2(apInterface.GetAddress(n0),UDP_PORT);
+    UdpEchoClientHelper echoClient2(staInterface.GetAddress(n0),UDP_PORT);
     echoClient2.SetAttribute("MaxPackets", UintegerValue(npackets));
     echoClient2.SetAttribute("Interval", TimeValue(Seconds(3.0)));
     echoClient2.SetAttribute("PacketSize", UintegerValue(packetSize));
@@ -247,12 +246,12 @@ int main(int argc, char* argv[])
                                     Seconds(0.25));         // Optional
 
 
-        Simulator::Stop(Seconds(10.0));
+        Simulator::Stop(Seconds(5.5));
         Simulator::Run();
         Simulator::Destroy();
     }else{
 
-        Simulator::Stop(Seconds(10.0));
+        Simulator::Stop(Seconds(5.5));
         Simulator::Run();
         Simulator::Destroy();
     }
